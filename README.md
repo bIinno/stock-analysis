@@ -19,7 +19,8 @@ pip install requests
 
 Before using the script, you need to obtain an [API key](https://www.alphavantage.co/support/#api-key) from AlphaVantage. You can sign up for a free API key on the AlphaVantage website here.
 
-Usage
+### Usage
+
 Clone or download this repository to your local machine.
 
 Create a text file named ticker.txt in the same directory as the script. Add the list of stock tickers (one per line) that you want to analyze.
@@ -28,7 +29,7 @@ Open the script and replace `"API_KEY"` with your AlphaVantage API key.
 
 Customize the `thresholds` dictionary with your desired threshold values for various financial ratios.
 
-Run the script:
+### Run the script:
 
 ```py
 python stock_data_analysis.py
