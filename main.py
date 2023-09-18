@@ -3,7 +3,7 @@ import requests
 import time
 
 # Define constants and API key
-ALPHA_VANTAGE_API_KEY = "ME5NSWDBKBB2KK05"
+ALPHA_VANTAGE_API_KEY = "API_KEY"
 ALPHA_VANTAGE_API_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_API_FUNCTION = "OVERVIEW"
 ALPHA_VANTAGE_API_TICKER_FILE = "ticker.txt"
