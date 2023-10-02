@@ -1,12 +1,16 @@
 # Import necessary libraries
+import logging
 import requests
 import time
 
 # Define constants and API key
-ALPHA_VANTAGE_API_KEY = "API_KEY"
+ALPHA_VANTAGE_API_KEY = "P9DSUB7ZTSEV3HIT"
 ALPHA_VANTAGE_API_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_API_FUNCTION = "OVERVIEW"
-ALPHA_VANTAGE_API_TICKER_FILE = "ticker.txt"
+ALPHA_VANTAGE_API_TICKER_FILE = "crazy\\ticker.txt"
+
+# Configure logging
+logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 # Define custom thresholds for ratios
 thresholds = {
@@ -62,8 +66,9 @@ passed_stocks = []
 for i, ticker in enumerate(tickers, start=1):
     try:
         dataset = get_stock_data(ticker)
-    except:
-        print(f"Error fetching data for {ticker}")
+    except Exception as e:
+        logging.error(f"Error fetching data for {ticker}: {str(e)}")
+        print(f"Error fetching data for {ticker}. Skipping...")
         continue
 
     # Access and print specific parameters and check against thresholds
@@ -75,18 +80,22 @@ for i, ticker in enumerate(tickers, start=1):
         price_to_book_ratio = dataset.get('PriceToBookRatio', 'N/A')
         ev_to_revenue = dataset.get('EVToRevenue', 'N/A')
 
-        if (
-            pe_ratio != 'N/A' and peg_ratio != 'N/A' and price_to_book_ratio != 'N/A' and ev_to_revenue != 'N/A' and
-            float(pe_ratio) >= thresholds.get('PE Ratio', float('-inf')) and
-            float(peg_ratio) >= thresholds.get('PEG Ratio', float('-inf')) and
-            float(price_to_book_ratio) >= thresholds.get('PriceToBookRatio', float('-inf')) and
-            float(ev_to_revenue) >= thresholds.get('EV to Revenue', float('-inf'))
-            # Add more ratio checks here
-        ):
-            print(f"{ticker} meets the threshold criteria.")
-            passed_stocks.append((symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue))
-        else:
-            print(f"{ticker} does not meet the threshold criteria.")
+        try:
+            if (
+                pe_ratio != 'N/A' and peg_ratio != 'N/A' and price_to_book_ratio != 'N/A' and ev_to_revenue != 'N/A' and
+                float(pe_ratio) >= thresholds.get('PE Ratio', float('-inf')) and
+                float(peg_ratio) >= thresholds.get('PEG Ratio', float('-inf')) and
+                float(price_to_book_ratio) >= thresholds.get('PriceToBookRatio', float('-inf')) and
+                float(ev_to_revenue) >= thresholds.get('EV to Revenue', float('-inf'))
+                # Add more ratio checks here
+            ):
+                print(f"{ticker} meets the threshold criteria.")
+                passed_stocks.append((symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue))
+            else:
+                print(f"{ticker} does not meet the threshold criteria.")
+        except ValueError:
+            print(f"Error converting PE Ratio to float for {ticker}. Skipping...")
+
     
     if i % 5 == 0 and i < len(tickers):
         print(f"Waiting for 60 seconds to account for API rate limit...")
