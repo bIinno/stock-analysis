@@ -3,10 +3,9 @@ import logging
 import requests
 import time
 import csv
-import os
 
 # Define constants and API key
-ALPHA_VANTAGE_API_KEY = "B2IL2274887GVP8O"
+ALPHA_VANTAGE_API_KEY = "8FOTZBBZYDBF2DBK"
 ALPHA_VANTAGE_API_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_API_FUNCTION = "OVERVIEW"
 ALPHA_VANTAGE_API_TICKER_FILE = "ticker.txt"
@@ -61,40 +60,10 @@ except Exception as e:
 if not tickers:
     print("No tickers found. Check the ticker file contents.")
 
-# Initialize the output file name
-output_file = "output.csv"  # Change the file extension to .csv
-
-# Create a set to store tickers from the existing CSV file
-existing_tickers = set()
-
-# Check if the output CSV file already exists
-if os.path.isfile(output_file):
-    with open(output_file, "r") as csvfile:
-        csv_reader = csv.DictReader(csvfile)
-        for row in csv_reader:
-            existing_tickers.add(row["Symbol"])
-
-# Remove tickers from ticker.txt if they are already in the CSV
-tickers = [ticker for ticker in tickers if ticker not in existing_tickers]
-
-def safe_float(value):
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return None
-    
 # Create a list to store passed stocks
 passed_stocks = []
 
-# Open the output file in append mode if it exists, or create a new file if it doesn't
-with open(output_file, "a", newline='') as csvfile:
-    # Create a CSV writer
-    csv_writer = csv.writer(csvfile)
-    
-    # If the file is newly created, write the header row
-    if not os.path.isfile(output_file):
-        csv_writer.writerow(["Symbol", "Sector", "PE Ratio", "PEG Ratio", "Price-to-Book Ratio", "EV to Revenue"])
-
+try:
     # Loop through the tickers and fetch data for each
     for i, ticker in enumerate(tickers, start=1):
         try:
@@ -108,55 +77,66 @@ with open(output_file, "a", newline='') as csvfile:
         if dataset:
             symbol = dataset.get('Symbol', 'N/A')
             sector = dataset.get('Sector', 'N/A')
-            pe_ratio = safe_float(dataset.get('PERatio', 'N/A'))
-            peg_ratio = safe_float(dataset.get('PEGRatio', 'N/A'))
-            price_to_book_ratio = safe_float(dataset.get('PriceToBookRatio', 'N/A'))
-            ev_to_revenue = safe_float(dataset.get('EVToRevenue', 'N/A'))
-
-            # Check if any ratio field failed to convert to float
-            if None in [pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue]:
-                print(f"Error converting ratio(s) to float for {ticker}. Skipping...")
-                continue
+            pe_ratio = dataset.get('PERatio', 'N/A')
+            peg_ratio = dataset.get('PEGRatio', 'N/A')
+            price_to_book_ratio = dataset.get('PriceToBookRatio', 'N/A')
+            ev_to_revenue = dataset.get('EVToRevenue', 'N/A')
 
             # Initialize the missing_ratio flag to False
             missing_ratio = False
 
             try:
                 # Check if each ratio is available and within the thresholds
-                if pe_ratio is not None and pe_ratio < thresholds.get('PE Ratio', float('-inf')):
-                    missing_ratio = True
+                if pe_ratio != 'None':
+                    pe_ratio = float(pe_ratio)
+                    if pe_ratio <= thresholds.get('PE Ratio', float('inf')):  # Adjust the comparison here
+                        missing_ratio = True
 
-                if peg_ratio is not None and peg_ratio < thresholds.get('PEG Ratio', float('-inf')):
-                    missing_ratio = True
+                if peg_ratio != 'N/A':
+                    peg_ratio = float(peg_ratio)
+                    if peg_ratio <= thresholds.get('PEG Ratio', float('inf')):  # Adjust the comparison here
+                        missing_ratio = True
 
-                if price_to_book_ratio is not None and price_to_book_ratio < thresholds.get('PriceToBookRatio', float('-inf')):
-                    missing_ratio = True
+                if price_to_book_ratio != 'N/A':
+                    price_to_book_ratio = float(price_to_book_ratio)
+                    if price_to_book_ratio <= thresholds.get('PriceToBookRatio', float('inf')):  # Adjust the comparison here
+                        missing_ratio = True
 
-                if ev_to_revenue is not None and ev_to_revenue < thresholds.get('EV to Revenue', float('-inf')):
-                    missing_ratio = True
+                if ev_to_revenue != 'N/A':
+                    ev_to_revenue = float(ev_to_revenue)
+                    if ev_to_revenue <= thresholds.get('EV to Revenue', float('inf')):  # Adjust the comparison here
+                        missing_ratio = True
 
                 # Check if at least one ratio is available
                 if not missing_ratio:
                     print(f"{ticker} meets the threshold criteria.")
                     passed_stocks.append((symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue))
-                    
-                    # Write the data row to the CSV file
-                    csv_writer.writerow([symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue])
                 else:
                     print(f"{ticker} does not meet the threshold criteria due to missing or below-threshold ratio(s).")
 
             except ValueError as ve:
                 logging.error(f"Error converting ratio(s) to float for {ticker}: {str(ve)}")
                 print(f"Error converting ratio(s) to float for {ticker}. Skipping...")
+                # Wait for 60 seconds to account for API rate limit
+                print(f"Waiting for 60 seconds to account for API rate limit...")
+                time.sleep(60)
+                continue
 
         if i % 5 == 0 and i < len(tickers):
             print(f"Waiting for 60 seconds to account for API rate limit...")
             time.sleep(60)
 
+except KeyboardInterrupt:
+    print("Keyboard interrupt detected. Exporting the collected data.")
+
 # Export passed stocks to a CSV file
-with open(output_file, "a", newline='') as csvfile:
+output_file = "output.csv"  # Change the file extension to .csv
+with open(output_file, "w", newline='') as csvfile:
     # Create a CSV writer
     csv_writer = csv.writer(csvfile)
+    
+    # Write the header row
+    csv_writer.writerow(["Symbol", "Sector", "PE Ratio", "PEG Ratio", "Price-to-Book Ratio", "EV to Revenue"])
     
     # Write the data rows
     for stock in passed_stocks:
