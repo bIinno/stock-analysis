@@ -7,7 +7,7 @@ import requests
 ALPHA_VANTAGE_API_KEY = "8FOTZBBZYDBF2DBK"
 ALPHA_VANTAGE_API_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_API_FUNCTION = "OVERVIEW"
-TICKER_SYMBOL = "ACN"  # Replace with the desired ticker symbol
+TICKER_SYMBOL = "CMPR"  # Replace with the desired ticker symbol
 
 # Function to get the JSON data for a specific ticker
 def get_ticker_data(ticker):
@@ -36,4 +36,6 @@ if ticker_data:
     # Print the entire JSON dataset
     print(ticker_data)
 else:
-    print(f"Data for {TICKER_SYMBOL} could not be retrieved.")
+    # Print the actual API error message from the response
+    response_message = ticker_data.get('Note', 'Unknown error') if ticker_data else 'Unknown error'
+    print(f"Data for {TICKER_SYMBOL} could not be retrieved. Error: {response_message}")

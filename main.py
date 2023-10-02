@@ -5,7 +5,7 @@ import time
 import csv
 
 # Define constants and API key
-ALPHA_VANTAGE_API_KEY = "P9DSUB7ZTSEV3HIT"
+ALPHA_VANTAGE_API_KEY = "8FOTZBBZYDBF2DBK"
 ALPHA_VANTAGE_API_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_API_FUNCTION = "OVERVIEW"
 ALPHA_VANTAGE_API_TICKER_FILE = "ticker.txt"
@@ -15,10 +15,10 @@ logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 # Define custom thresholds for ratios
 thresholds = {
-    "PE Ratio": 1,  # Customize your threshold value here
+    "PE Ratio": 15,  # Customize your threshold value here
     "PEG Ratio": 1,  # Customize your threshold value here
-    "PriceToBookRatio": 0.7,  # Customize your threshold value here
-    "EV to Revenue": 0.5,  # Customize your threshold value here for EV to Revenue
+    "PriceToBookRatio": 1,  # Customize your threshold value here
+    "EV to Revenue": 1,  # Customize your threshold value here for EV to Revenue
     # Add more ratios and thresholds as needed
 }
 
@@ -84,33 +84,42 @@ for i, ticker in enumerate(tickers, start=1):
         # Initialize the missing_ratio flag to False
         missing_ratio = False
 
-        # Check if each ratio is available and greater than or equal to the threshold
-        if pe_ratio != 'None':
-            pe_ratio = float(pe_ratio)
-            if pe_ratio < thresholds.get('PE Ratio', float('-inf')):
-                missing_ratio = True
+        try:
+            # Check if each ratio is available and within the thresholds
+            if pe_ratio != 'None':
+                pe_ratio = float(pe_ratio)
+                if pe_ratio < thresholds.get('PE Ratio', float('-inf')):
+                    missing_ratio = True
 
-        if peg_ratio != 'N/A':
-            peg_ratio = float(peg_ratio)
-            if peg_ratio < thresholds.get('PEG Ratio', float('-inf')):
-                missing_ratio = True
+            if peg_ratio != 'N/A':
+                peg_ratio = float(peg_ratio)
+                if peg_ratio < thresholds.get('PEG Ratio', float('-inf')):
+                    missing_ratio = True
 
-        if price_to_book_ratio != 'N/A':
-            price_to_book_ratio = float(price_to_book_ratio)
-            if price_to_book_ratio < thresholds.get('PriceToBookRatio', float('-inf')):
-                missing_ratio = True
+            if price_to_book_ratio != 'N/A':
+                price_to_book_ratio = float(price_to_book_ratio)
+                if price_to_book_ratio < thresholds.get('PriceToBookRatio', float('-inf')):
+                    missing_ratio = True
 
-        if ev_to_revenue != 'N/A':
-            ev_to_revenue = float(ev_to_revenue)
-            if ev_to_revenue < thresholds.get('EV to Revenue', float('-inf')):
-                missing_ratio = True
+            if ev_to_revenue != 'N/A':
+                ev_to_revenue = float(ev_to_revenue)
+                if ev_to_revenue < thresholds.get('EV to Revenue', float('-inf')):
+                    missing_ratio = True
 
-        # Check if at least one ratio is available
-        if not missing_ratio:
-            print(f"{ticker} meets the threshold criteria.")
-            passed_stocks.append((symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue))
-        else:
-            print(f"{ticker} does not meet the threshold criteria due to missing or below-threshold ratio(s).")
+            # Check if at least one ratio is available
+            if not missing_ratio:
+                print(f"{ticker} meets the threshold criteria.")
+                passed_stocks.append((symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue))
+            else:
+                print(f"{ticker} does not meet the threshold criteria due to missing or below-threshold ratio(s).")
+
+        except ValueError as ve:
+            logging.error(f"Error converting ratio(s) to float for {ticker}: {str(ve)}")
+            print(f"Error converting ratio(s) to float for {ticker}. Skipping...")
+            # Wait for 60 seconds to account for API rate limit
+            print(f"Waiting for 60 seconds to account for API rate limit...")
+            time.sleep(60)
+            continue
 
     if i % 5 == 0 and i < len(tickers):
         print(f"Waiting for 60 seconds to account for API rate limit...")
