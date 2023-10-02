@@ -4,10 +4,10 @@
 import requests
 
 # Define constants and API key
-ALPHA_VANTAGE_API_KEY = "API_KEY"
+ALPHA_VANTAGE_API_KEY = "P9DSUB7ZTSEV3HIT"
 ALPHA_VANTAGE_API_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_API_FUNCTION = "OVERVIEW"
-TICKER_SYMBOL = "TM"  # Replace with the desired ticker symbol
+TICKER_SYMBOL = "STX"  # Replace with the desired ticker symbol
 
 # Function to get the JSON data for a specific ticker
 def get_ticker_data(ticker):
