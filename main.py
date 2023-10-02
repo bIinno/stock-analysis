@@ -74,41 +74,60 @@ try:
             print(f"Error fetching data for {ticker}. Skipping...")
             continue
 
-        # Access and print specific parameters and check against thresholds
-        if dataset:
-            symbol = dataset.get('Symbol', 'N/A')
-            sector = dataset.get('Sector', 'N/A')
-            pe_ratio_str = dataset.get('PERatio', 'N/A')
-            peg_ratio = dataset.get('PEGRatio', 'N/A')
-            price_to_book_ratio = dataset.get('PriceToBookRatio', 'N/A')
-            ev_to_revenue = dataset.get('EVToRevenue', 'N/A')
+        # Check if dataset is None, indicating no data was received
+        if dataset is None:
+            print(f"No data received for {ticker}. Skipping...")
+            continue
 
-            # Check if PE ratio is "None" and set it to None in that case
-            if pe_ratio_str.lower() == 'none':
+        # Access and print specific parameters and check against thresholds
+        symbol = dataset.get('Symbol', 'N/A')
+        sector = dataset.get('Sector', 'N/A')
+        pe_ratio_str = dataset.get('PERatio', 'N/A')
+        peg_ratio_str = dataset.get('PEGRatio', 'N/A')  # Get the 'PEG Ratio' as a string
+        price_to_book_ratio = dataset.get('PriceToBookRatio', 'N/A')
+        ev_to_revenue = dataset.get('EVToRevenue', 'N/A')
+
+        # Check if PE ratio is "None" and set it to None in that case
+        if pe_ratio_str.lower() == 'none':
+            pe_ratio = None
+            pe_message = "PE Ratio not available"
+        else:
+            try:
+                # Clean up the 'PERatio' string by removing any non-numeric characters
+                pe_ratio_str = pe_ratio_str.replace(',', '')  # Remove commas if present
+                pe_ratio = float(pe_ratio_str)  # Attempt to convert to float
+                pe_message = ""
+            except ValueError:
+                print(f"Error converting PE Ratio to float for {ticker}. Skipping...")
                 pe_ratio = None
                 pe_message = "PE Ratio not available"
-            else:
-                try:
-                    # Clean up the 'PERatio' string by removing any non-numeric characters
-                    pe_ratio_str = pe_ratio_str.replace(',', '')  # Remove commas if present
-                    pe_ratio = float(pe_ratio_str)  # Attempt to convert to float
-                    pe_message = ""
-                except ValueError:
-                    print(f"Error converting PE Ratio to float for {ticker}. Skipping...")
-                    pe_ratio = None
-                    pe_message = "PE Ratio not available"
 
-            if (
-                (pe_ratio is None or pe_ratio >= thresholds.get('PE Ratio', float('-inf'))) and
-                float(peg_ratio) >= thresholds.get('PEG Ratio', float('-inf')) and
-                float(price_to_book_ratio) >= thresholds.get('PriceToBookRatio', float('-inf')) and
-                float(ev_to_revenue) >= thresholds.get('EV to Revenue', float('-inf'))
-                # Add more ratio checks here
-            ):
-                print(f"{ticker} meets the threshold criteria.")
-                passed_stocks.append((symbol, sector, pe_message, peg_ratio, price_to_book_ratio, ev_to_revenue))
-            else:
-                print(f"{ticker} does not meet the threshold criteria.")
+        # Check if PEG ratio is "None" and set it to None in that case
+        if peg_ratio_str.lower() == 'none':
+            peg_ratio = None
+            peg_message = "PEG Ratio not available"
+        else:
+            try:
+                # Clean up the 'PEGRatio' string by removing any non-numeric characters
+                peg_ratio_str = peg_ratio_str.replace(',', '')  # Remove commas if present
+                peg_ratio = float(peg_ratio_str)  # Attempt to convert to float
+                peg_message = ""
+            except ValueError:
+                print(f"Error converting PEG Ratio to float for {ticker}. Skipping...")
+                peg_ratio = None
+                peg_message = "PEG Ratio not available"
+
+        if (
+            (pe_ratio is None or pe_ratio >= thresholds.get('PE Ratio', float('-inf'))) and
+            (peg_ratio is None or float(peg_ratio) >= thresholds.get('PEG Ratio', float('-inf'))) and
+            float(price_to_book_ratio) >= thresholds.get('PriceToBookRatio', float('-inf')) and
+            float(ev_to_revenue) >= thresholds.get('EV to Revenue', float('-inf'))
+            # Add more ratio checks here
+        ):
+            print(f"{ticker} meets the threshold criteria.")
+            passed_stocks.append((symbol, sector, pe_message, peg_message, price_to_book_ratio, ev_to_revenue))
+        else:
+            print(f"{ticker} does not meet the threshold criteria.")
 
         if i % 5 == 0 and i < len(tickers):
             print(f"Waiting for 60 seconds to account for API rate limit...")
@@ -117,13 +136,13 @@ try:
 except KeyboardInterrupt:
     print("Script interrupted. Saving progress...")
 
-# Export passed stocks to an output file
-output_file = "output.txt"
+# Export passed stocks to an output file within the "crazy" folder
+output_file = os.path.join("output.txt")
 with open(output_file, "w") as f:
     f.write("Symbol, Sector, PE Ratio, PEG Ratio, Price-to-Book Ratio, EV to Revenue\n")
     for stock in passed_stocks:
-        symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue = stock
-        f.write(f"{symbol}, {sector}, {pe_ratio}, {peg_ratio}, {price_to_book_ratio}, {ev_to_revenue}\n")
+        symbol, sector, pe_message, peg_message, price_to_book_ratio, ev_to_revenue = stock
+        f.write(f"{symbol}, {sector}, {pe_message}, {peg_message}, {price_to_book_ratio}, {ev_to_revenue}\n")
 
 print("Passed stocks exported to", output_file)
 
