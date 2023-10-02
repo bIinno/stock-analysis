@@ -1,3 +1,0 @@
-Symbol, Sector, PE Ratio, PEG Ratio, Price-to-Book Ratio, EV to Revenue
-STX, TECHNOLOGY, None, 32.54, 101.31, 1.587
-ACN, TRADE & SERVICES, 28.49, 2.975, 8.69, 3.043

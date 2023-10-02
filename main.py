@@ -2,6 +2,7 @@
 import logging
 import requests
 import time
+import csv
 
 # Define constants and API key
 ALPHA_VANTAGE_API_KEY = "P9DSUB7ZTSEV3HIT"
@@ -115,12 +116,18 @@ for i, ticker in enumerate(tickers, start=1):
         print(f"Waiting for 60 seconds to account for API rate limit...")
         time.sleep(60)
 
-# Export passed stocks to an output file
-output_file = "output.txt"
-with open(output_file, "w") as f:
-    f.write("Symbol, Sector, PE Ratio, PEG Ratio, Price-to-Book Ratio, EV to Revenue\n")
+# Export passed stocks to a CSV file
+output_file = "output.csv"  # Change the file extension to .csv
+with open(output_file, "w", newline='') as csvfile:
+    # Create a CSV writer
+    csv_writer = csv.writer(csvfile)
+    
+    # Write the header row
+    csv_writer.writerow(["Symbol", "Sector", "PE Ratio", "PEG Ratio", "Price-to-Book Ratio", "EV to Revenue"])
+    
+    # Write the data rows
     for stock in passed_stocks:
         symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue = stock
-        f.write(f"{symbol}, {sector}, {pe_ratio}, {peg_ratio}, {price_to_book_ratio}, {ev_to_revenue}\n")
+        csv_writer.writerow([symbol, sector, pe_ratio, peg_ratio, price_to_book_ratio, ev_to_revenue])
 
 print("Passed stocks exported to", output_file)
