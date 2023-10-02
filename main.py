@@ -21,6 +21,7 @@ thresholds = {
     # Add more ratios and thresholds as needed
 }
 
+
 # Function to get the stock data from AlphaVantage
 def get_stock_data(ticker):
     # Define parameters
