@@ -1,8 +1,9 @@
 # Import necessary libraries
-import logging
-import requests
-import time
 import csv
+import logging
+import time
+
+import requests
 
 # Define constants and API key
 ALPHA_VANTAGE_API_KEY = "8FOTZBBZYDBF2DBK"
@@ -15,11 +16,10 @@ logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 # Define custom thresholds for ratios
 thresholds = {
-    "PE Ratio": 15,  # Customize your threshold value here
-    "PEG Ratio": 1,  # Customize your threshold value here
-    "PriceToBookRatio": 1,  # Customize your threshold value here
-    "EV to Revenue": 1,  # Customize your threshold value here for EV to Revenue
-    # Add more ratios and thresholds as needed
+    "PE Ratio": 20,
+    "PEG Ratio": 1,
+    "PriceToBookRatio": 1,
+    "EV to Revenue": 1,
 }
 
 # Function to get the stock data from AlphaVantage
